@@ -1,39 +1,32 @@
 package brooke.GameObjects;
 
+import java.util.ArrayList;
+
 public class Deck {
-  private Card[] cards;
-  private int topCardIndex;
+  private ArrayList<Card> cards;
 
   public Deck() {
-    cards = new Card[52];
-    topCardIndex = 0;
-    int i = 0;
+    cards = new ArrayList<Card>(52);
     for (Suit suit : Suit.values()) {
       for (Rank rank : Rank.values()) {
-        cards[i] = new Card(rank, suit);
-        i++;
+        cards.add(new Card(rank, suit));
       }
     }
   }
 
-  public void shuffle() {
-    for (int i = 0; i < cards.length; i++) {
-      int randomIndex = (int) (Math.random() * cards.length);
-      Card temp = cards[i];
-      cards[i] = cards[randomIndex];
-      cards[randomIndex] = temp;
-    }
-  }
-
   public Card dealCard() {
-    return cards[topCardIndex++];
+    return cards.remove((int) Math.random() * cards.size());
   }
 
-  public boolean hasMoreCards() {
-    return topCardIndex < cards.length;
+  public boolean drawSpecificCard(Card card) {
+    return cards.remove(card);
   }
 
-  public void reset() {
-    topCardIndex = 0;
+  public boolean isEmpty() {
+    return cards.isEmpty();
+  }
+
+  public int size() {
+    return cards.size();
   }
 }

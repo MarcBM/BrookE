@@ -33,4 +33,31 @@ class CardTest {
 
     assertTrue(card3.compareTo(card1) < 0);
   }
+
+  @Test
+  void parseCard() {
+    Card card = Card.parseCard("AS");
+    assert card.getRank() == Rank.ACE;
+    assert card.getSuit() == Suit.SPADES;
+
+    Card card2 = Card.parseCard("10H");
+    assert card2.getRank() == Rank.TEN;
+    assert card2.getSuit() == Suit.HEARTS;
+
+    Card card3 = Card.parseCard("2D");
+    assert card3.getRank() == Rank.TWO;
+    assert card3.getSuit() == Suit.DIAMONDS;
+
+    Card card4 = Card.parseCard("Qd");
+    assert card4.getRank() == Rank.QUEEN;
+    assert card4.getSuit() == Suit.DIAMONDS;
+
+    Card card5 = Card.parseCard("7c");
+    assert card5.getRank() == Rank.SEVEN;
+    assert card5.getSuit() == Suit.CLUBS;
+
+    Card card6 = Card.parseCard("ah");
+    assert card6.getRank() == Rank.ACE;
+    assert card6.getSuit() == Suit.HEARTS;
+  }
 }
