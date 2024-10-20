@@ -1,13 +1,19 @@
 package brooke.GameObjects;
 
-public class Player {
+public class Player implements Comparable<Player> {
+  private int id;
   private String name;
   private Hand hand = null;
   private int score = 0;
   private int tricks = 0;
 
-  public Player(String name) {
+  public Player(int id, String name) {
+    this.id = id;
     this.name = name;
+  }
+
+  public int getId() {
+    return id;
   }
 
   public String getName() {
@@ -49,5 +55,13 @@ public class Player {
 
   public boolean hasCards() {
     return !hand.isEmpty();
+  }
+
+  @Override
+  public int compareTo(Player other) {
+    if (this.score == other.score) {
+      return this.id - other.id;
+    }
+    return this.score - other.score;
   }
 }

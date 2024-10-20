@@ -11,7 +11,7 @@ public class PlayerTest {
 
   @BeforeEach
   void setUp() {
-    player = new Player("Brooke");
+    player = new Player(0, "Brooke");
   }
 
   @Test
@@ -53,5 +53,21 @@ public class PlayerTest {
   void addScore() {
     player.addScore(5);
     assertEquals(player.getScore(), 5);
+  }
+
+  @Test
+  void comparePlayers() {
+    Player player2 = new Player(1, "Player2");
+    player.addScore(5);
+    player2.addScore(10);
+    assertTrue(player.compareTo(player2) < 0);
+
+    player.addScore(5);
+
+    assertTrue(player.compareTo(player2) < 0);
+
+    player.addScore(5);
+
+    assertTrue(player.compareTo(player2) > 0);
   }
 }
