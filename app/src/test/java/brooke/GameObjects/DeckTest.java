@@ -15,6 +15,21 @@ class DeckTest {
   }
 
   @Test
+  void getRemainingCards() {
+    assertEquals(deck.getRemainingCards().size(), 52);
+    deck.dealCard();
+    assertEquals(deck.getRemainingCards().size(), 51);
+  }
+
+  @Test
+  void isCardInDeck() {
+    Card card = new Card(Rank.ACE, Suit.SPADES);
+    assertTrue(deck.isCardInDeck(card));
+    deck.drawSpecificCard(card);
+    assertFalse(deck.isCardInDeck(card));
+  }
+
+  @Test
   void deckSize() {
     assertEquals(deck.size(), 52);
   }

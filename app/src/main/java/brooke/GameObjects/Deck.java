@@ -14,6 +14,14 @@ public class Deck {
     }
   }
 
+  public ArrayList<Card> getRemainingCards() {
+    return cards;
+  }
+
+  public boolean isCardInDeck(Card card) {
+    return cards.contains(card);
+  }
+
   public Card dealCard() {
     return cards.remove((int) Math.random() * cards.size());
   }
