@@ -11,13 +11,13 @@ public class PlayerTest {
 
   @BeforeEach
   void setUp() {
-    player = new Player(0, "Brooke");
+    player = new Player("BrookE");
   }
 
   @Test
   void newPlayer() {
     assertNotNull(player);
-    assertEquals(player.getName(), "Brooke");
+    assertEquals(player.getName(), "BrookE");
     assertEquals(player.getScore(), 0);
     assertEquals(player.getTricks(), 0);
     assertNull(player.getHand());
@@ -57,7 +57,7 @@ public class PlayerTest {
 
   @Test
   void comparePlayers() {
-    Player player2 = new Player(1, "Player2");
+    Player player2 = new Player("Player2");
     player.addScore(5);
     player2.addScore(10);
     assertTrue(player.compareTo(player2) < 0);

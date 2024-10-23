@@ -1,14 +1,15 @@
 package brooke.GameObjects;
 
 public class Player implements Comparable<Player> {
+  public static int _id = 1;
   private int id;
   private String name;
   private Hand hand = null;
   private int score = 0;
   private int tricks = 0;
 
-  public Player(int id, String name) {
-    this.id = id;
+  public Player(String name) {
+    this.id = _id++;
     this.name = name;
   }
 
