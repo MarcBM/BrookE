@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import brooke.GameObjects.*;
 import brooke.Players.*;
+import brooke.util.*;
 
 public class GameManager {
   private ArrayList<Player> players;
@@ -32,6 +33,7 @@ public class GameManager {
 
   public void playGame() {
     while (!isGameOver()) {
+      printCurrentGameState();
       // TODO
       state.finishRound();
     }
@@ -115,7 +117,7 @@ public class GameManager {
       }
       // Trump Suit (3)
       if (state.trumpCardHistory[i] != null) {
-        roundRow += " " + state.trumpCardHistory[i].getSuit().toString().charAt(0) + " ||";
+        roundRow += " " + state.trumpCardHistory[i].getSuit().toShortString() + " ||";
       } else {
         roundRow += "   ||";
       }
@@ -192,6 +194,41 @@ public class GameManager {
     printScoreSheetHorizontalBar(totalRowWidth, "=");
 
     // Final Row: Per Player: Placing (5) | Average (5)
+    printScoreSheetBufferRow(numPlayers, isLargeGame, true);
+
+    String finalRow = "||";
+    // Num Cards
+    if (isLargeGame) {
+      finalRow += "    |";
+    } else {
+      finalRow += "   |";
+    }
+    // Trump Suit
+    finalRow += "   ||";
+    // Per Player:
+    for (int i = 0; i < numPlayers; i++) {
+      if (state.currentRound == 0) {
+        finalRow += "     |     ||";
+      } else {
+        // Placing
+        finalRow += " " + findPlacing(state.scoreHistory[state.currentRound - 1], i) + " |";
+        // Average
+        float average = findAverage(i);
+        if (average < 10) {
+          finalRow += " ";
+        }
+        finalRow += String.format("%.1f", average) + " ||";
+      }
+    }
+    // Bid Delta
+    finalRow += "    |";
+    // Score Delta
+    finalRow += "     ||";
+
+    System.out.println(finalRow);
+
+    printScoreSheetBufferRow(numPlayers, isLargeGame, true);
+    printScoreSheetHorizontalBar(totalRowWidth, "=");
 
   }
 
@@ -228,8 +265,86 @@ public class GameManager {
     System.out.println(buffer);
   }
 
-  private void printCurrentGameState() {
+  private String findPlacing(int[] scores, int player) {
+    int playerScore = scores[player];
+    int numScoresAbovePlayer = 0;
+    for (int score : scores) {
+      if (score > playerScore) {
+        numScoresAbovePlayer++;
+      }
+    }
 
+    switch (numScoresAbovePlayer) {
+      case 0:
+        return "1st";
+      case 1:
+        return "2nd";
+      case 2:
+        return "3rd";
+      case 3:
+        return "4th";
+      case 4:
+        return "5th";
+      case 5:
+        return "6th";
+      case 6:
+        return "7th";
+      case 7:
+        return "8th";
+      case 8:
+        return "9th";
+      case 9:
+        return "10th";
+      default:
+        return "ERR";
+    }
+  }
+
+  private float findAverage(int player) {
+    int score = state.scoreHistory[state.currentRound - 1][player];
+    int rounds = state.currentRound + 1;
+    return (float) score / rounds;
+  }
+
+  private void printCurrentGameState() {
+    InputHandler.printNewSection();
+
+    System.out.println("General Game Information:\n");
+    System.out.println("Number of Players: " + state.numPlayers);
+    System.out.println("Max Hand Size: " + state.totalRounds / 2);
+
+    System.out.print("\n");
+
+    String roundString;
+    int maxHandSize = state.totalRounds / 2;
+    int cards = state.handSize;
+    if (state.currentRound >= maxHandSize) {
+      roundString = "" + cards + " UP";
+    } else {
+      roundString = "" + cards + " DOWN";
+    }
+
+    System.out.println("Current Round: " + roundString);
+    System.out.println("Current Dealer: " + getPlayerNameById(state.currentDealer));
+    System.out.println("Current Leader: " + getPlayerNameById(state.currentLeader));
+
+    String stateString;
+    switch (state.currentPhase) {
+      case 0:
+        stateString = "BIDDING";
+        break;
+      case 1:
+        stateString = "PLAYING";
+        break;
+      default:
+        stateString = "ERROR";
+        break;
+    }
+    System.out.println("\nCurrent Game State: " + stateString);
+    System.out.println("Currently on: " + getPlayerNameById(state.currentPlayer));
+
+    System.out.print("\n");
+    printScoreSheet();
   }
 
   private String getPlayerNameById(int id) {

@@ -24,10 +24,13 @@ public class GameState {
   public int[] currentBids;
   public int[] currentTricks;
   public Card trumpCard;
+  public int playedTricks;
 
   public Card[] currentPlay;
   public Card winningCard;
   public int winningPlayer;
+
+  public int currentPhase;
 
   public GameState(int numPlayers, int startingHandSize) {
     this.numPlayers = numPlayers;
@@ -69,6 +72,8 @@ public class GameState {
 
     this.currentTricks = new int[numPlayers];
     this.trumpCard = null;
+    this.playedTricks = 0;
+    this.currentPhase = 0;
   }
 
   public void newRound(Card trumpCard) {
@@ -116,6 +121,8 @@ public class GameState {
 
     this.currentTricks = new int[numPlayers];
     this.trumpCard = null;
+    this.playedTricks = 0;
+    this.currentPhase = 0;
   }
 
   private int calculateScore(int bid, int tricks) {
@@ -157,6 +164,24 @@ public class GameState {
     return maxScore - minScore;
   }
 
+  public void makeBid(int player, int bid) {
+    this.currentBids[player] = bid;
+  }
+
+  public void playCard(int player, Card card) {
+    this.currentPlay[player] = card;
+
+    if (isCardWinning(this.winningCard, card)) {
+      this.winningCard = card;
+      this.winningPlayer = player;
+    }
+
+    currentPlayer = (currentPlayer + 1) % numPlayers;
+    if (currentPlayer == currentLeader) {
+      finishPlay();
+    }
+  }
+
   public void finishPlay() {
     this.currentLeader = this.winningPlayer;
     this.currentPlayer = this.winningPlayer;
@@ -166,14 +191,11 @@ public class GameState {
     this.currentPlay = new Card[this.numPlayers];
     this.winningCard = null;
     this.winningPlayer = -1;
-  }
 
-  public void playCard(int player, Card card) {
-    this.currentPlay[player] = card;
+    this.playedTricks++;
 
-    if (isCardWinning(this.winningCard, card)) {
-      this.winningCard = card;
-      this.winningPlayer = player;
+    if (this.playedTricks == this.handSize) {
+      finishRound();
     }
   }
 

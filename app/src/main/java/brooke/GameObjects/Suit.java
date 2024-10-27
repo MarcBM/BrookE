@@ -18,8 +18,7 @@ public enum Suit {
     }
   }
 
-  @Override
-  public String toString() {
+  public String toShortString() {
     switch (this) {
       case SPADES:
         return "S";

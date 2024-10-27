@@ -48,7 +48,7 @@ public class InputHandler {
     }
   }
 
-  private static void printNewSection() {
+  public static void printNewSection() {
     System.out.print(NEW_SECTION);
   }
 
