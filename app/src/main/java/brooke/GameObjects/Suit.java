@@ -17,4 +17,20 @@ public enum Suit {
         throw new IllegalArgumentException("Invalid suit: " + suitString);
     }
   }
+
+  @Override
+  public String toString() {
+    switch (this) {
+      case SPADES:
+        return "S";
+      case HEARTS:
+        return "H";
+      case DIAMONDS:
+        return "D";
+      case CLUBS:
+        return "C";
+      default:
+        throw new IllegalArgumentException("Invalid suit: " + this);
+    }
+  }
 }

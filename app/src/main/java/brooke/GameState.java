@@ -16,6 +16,11 @@ public class GameState {
   public int[][] trickHistory;
   public int[][] scoreHistory;
 
+  public Card[] trumpCardHistory;
+  public int[] dealerHistory;
+  public int[] deltaScoreHistory;
+  public int[] deltaBidHistory;
+
   public int[] currentBids;
   public int[] currentTricks;
   public Card trumpCard;
@@ -34,15 +39,28 @@ public class GameState {
     this.handSize = startingHandSize;
 
     this.bidHistory = new int[totalRounds][numPlayers];
+    this.scoreHistory = new int[totalRounds][numPlayers];
 
     for (int i = 0; i < totalRounds; i++) {
       for (int j = 0; j < numPlayers; j++) {
         this.bidHistory[i][j] = -1;
+        this.scoreHistory[i][j] = -1;
       }
     }
 
     this.trickHistory = new int[totalRounds][numPlayers];
-    this.scoreHistory = new int[totalRounds][numPlayers];
+
+    this.trumpCardHistory = new Card[totalRounds];
+    this.dealerHistory = new int[totalRounds];
+    this.deltaScoreHistory = new int[totalRounds];
+    this.deltaBidHistory = new int[totalRounds];
+
+    for (int i = 0; i < totalRounds; i++) {
+      this.dealerHistory[i] = -1;
+      this.deltaScoreHistory[i] = -1;
+      this.deltaBidHistory[i] = -100;
+    }
+
     this.currentBids = new int[numPlayers];
 
     for (int i = 0; i < numPlayers; i++) {
@@ -50,6 +68,7 @@ public class GameState {
     }
 
     this.currentTricks = new int[numPlayers];
+    this.trumpCard = null;
   }
 
   public void newRound(Card trumpCard) {
@@ -72,7 +91,19 @@ public class GameState {
           + currentScore;
     }
 
+    this.trumpCardHistory[this.currentRound] = this.trumpCard;
+    this.dealerHistory[this.currentRound] = this.currentDealer;
+    this.deltaBidHistory[this.currentRound] = calculateDeltaBid();
+    this.deltaScoreHistory[this.currentRound] = calculateDeltaScore();
+
     this.currentRound++;
+
+    if (this.currentRound < this.totalRounds / 2) {
+      this.handSize--;
+    } else if (this.currentRound > this.totalRounds / 2) {
+      this.handSize++;
+    }
+
     this.currentDealer = (this.currentDealer + 1) % this.numPlayers;
     this.currentPlayer = (this.currentDealer + 1) % this.numPlayers;
     this.currentLeader = this.currentPlayer;
@@ -84,7 +115,6 @@ public class GameState {
     }
 
     this.currentTricks = new int[numPlayers];
-
     this.trumpCard = null;
   }
 
@@ -98,6 +128,33 @@ public class GameState {
     } else {
       return tricks;
     }
+  }
+
+  private int calculateDeltaBid() {
+    int bidCount = 0;
+
+    for (int i = 0; i < numPlayers; i++) {
+      bidCount += this.currentBids[i];
+    }
+
+    return bidCount - this.handSize;
+  }
+
+  private int calculateDeltaScore() {
+    int minScore = Integer.MAX_VALUE;
+    int maxScore = Integer.MIN_VALUE;
+
+    for (int i = 0; i < numPlayers; i++) {
+      if (this.scoreHistory[this.currentRound][i] < minScore) {
+        minScore = this.scoreHistory[this.currentRound][i];
+      }
+
+      if (this.scoreHistory[this.currentRound][i] > maxScore) {
+        maxScore = this.scoreHistory[this.currentRound][i];
+      }
+    }
+
+    return maxScore - minScore;
   }
 
   public void finishPlay() {
