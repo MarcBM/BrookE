@@ -3,7 +3,6 @@ package brooke.util;
 import java.util.Scanner;
 
 import brooke.*;
-import brooke.GameObjects.*;
 
 public class InputHandler {
   private static Scanner scanner = new Scanner(System.in);

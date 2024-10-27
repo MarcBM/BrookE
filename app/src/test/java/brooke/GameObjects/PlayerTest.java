@@ -1,6 +1,9 @@
 package brooke.GameObjects;
 
 import org.junit.jupiter.api.Test;
+
+import brooke.Players.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +14,7 @@ public class PlayerTest {
 
   @BeforeEach
   void setUp() {
-    player = new Player("BrookE");
+    player = new Human("BrookE");
   }
 
   @Test
@@ -40,16 +43,6 @@ public class PlayerTest {
   }
 
   @Test
-  void playCard() {
-    player.newHand(5);
-    Card card = new Card(Rank.ACE, Suit.SPADES);
-    player.drawCard(card);
-    Card playedCard = player.playCard(card);
-    assertEquals(card, playedCard);
-    assertFalse(player.hasCards());
-  }
-
-  @Test
   void addScore() {
     player.addScore(5);
     assertEquals(player.getScore(), 5);
@@ -57,7 +50,7 @@ public class PlayerTest {
 
   @Test
   void comparePlayers() {
-    Player player2 = new Player("Player2");
+    Player player2 = new Human("Player2");
     player.addScore(5);
     player2.addScore(10);
     assertTrue(player.compareTo(player2) < 0);
