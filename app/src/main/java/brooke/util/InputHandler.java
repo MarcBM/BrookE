@@ -1,8 +1,10 @@
 package brooke.util;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import brooke.*;
+import brooke.GameObjects.*;
 
 public class InputHandler {
   private static Scanner scanner = new Scanner(System.in);
@@ -48,15 +50,54 @@ public class InputHandler {
     }
   }
 
+  public static int gatherBid(int handSize, int illegalBid) {
+    if (illegalBid >= 0) {
+      System.out.println("You cannot bid " + illegalBid + ".");
+    }
+
+    int bid = intResponse(0, handSize);
+    if (bid == illegalBid) {
+      System.out.println("You cannot bid " + illegalBid + ".");
+      return gatherBid(handSize, illegalBid);
+    }
+
+    return bid;
+  }
+
+  public static Card gatherPlay(ArrayList<Card> legalPlays) {
+    System.out.println("\nWhat card would you like to play?");
+    Card card = cardResponse();
+    if (!legalPlays.contains(card)) {
+      System.out.println("You cannot play that card.");
+      return gatherPlay(legalPlays);
+    }
+    return card;
+  }
+
+  public static Card cardResponse() {
+    String response = scanner.nextLine();
+    try {
+      return Card.parseCard(response);
+    } catch (IllegalArgumentException e) {
+      System.out.println("Please enter a valid card.");
+      return cardResponse();
+    }
+  }
+
   public static void printNewSection() {
     System.out.print(NEW_SECTION);
+  }
+
+  public static void pressEnterToContinue() {
+    System.out.println("\nPress Enter to continue...");
+    scanner.nextLine();
   }
 
   private static String stringResponse() {
     return scanner.nextLine();
   }
 
-  private static boolean yesNoResponse() {
+  public static boolean yesNoResponse() {
     String response = scanner.nextLine();
     while (!response.equalsIgnoreCase("y") && !response.equalsIgnoreCase("n")) {
       System.out.println("Please enter 'y' or 'n'");

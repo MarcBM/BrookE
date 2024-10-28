@@ -14,9 +14,15 @@ public class GameManager {
   public GameManager(CrystalBrook game, int numPlayers, int startingHandSize) {
     this.game = game;
     players = new ArrayList<>(numPlayers);
-    state = new GameState(numPlayers, startingHandSize);
 
     initialiseGame(numPlayers);
+
+    String[] playerNames = new String[numPlayers];
+    for (int i = 0; i < numPlayers; i++) {
+      playerNames[i] = getPlayerById(i).getName();
+    }
+
+    state = new GameState(numPlayers, startingHandSize, playerNames);
   }
 
   public void initialiseGame(int numPlayers) {
@@ -33,14 +39,242 @@ public class GameManager {
 
   public void playGame() {
     while (!isGameOver()) {
-      printCurrentGameState();
-      // TODO
-      state.finishRound();
+
+      // printCurrentGameState();
+
+      if (state.currentPhase == 0) {
+        // Setup Phase
+        newRound();
+        // Ready to start the bidding.
+        state.currentPhase = 1;
+      } else if (state.currentPhase == 1) {
+        // Bidding Phase
+        if (state.handSize != 1) {
+          // Regular Rounds
+          makeBid(state.currentPlayer, getPlayerById(state.currentPlayer).makeBid(state));
+        } else {
+          // One Rounds
+          if (state.currentRound < state.totalRounds / 2) {
+            // Head Round
+            makeHeadBids();
+          } else {
+            // "Regular" One Round
+            makeOneRoundBids();
+          }
+        }
+
+        // If we are back at the current leader, then we are ready to start playing.
+        if (state.currentPlayer == state.currentLeader) {
+          state.currentPhase = 2;
+        }
+      } else if (state.currentPhase == 2) {
+        // Playing Phase
+        playCard(state.currentPlayer, getPlayerById(state.currentPlayer).playCard(state));
+
+        // If we are back at the current leader, then we have finished the trick
+        if (state.currentPlayer == state.currentLeader) {
+          finishPlay();
+        }
+
+        // If we have played the full number of tricks this hand, it is time to finish
+        // the round.
+        if (state.playedTricks == state.handSize) {
+          finishRound();
+
+          // Print the Score Sheet
+          printScoreSheet();
+
+          InputHandler.pressEnterToContinue();
+
+          state.currentPhase = 0;
+        }
+      }
     }
+  }
+
+  private void newRound() {
+    // Have the game setup the new round.
+    game.setupRound(state, players);
+    // Get the trump card from the game.
+    state.trumpCard = game.getTrumpCard();
+  }
+
+  private void makeBid(int player, int bid) {
+    // Apply Bid
+    state.currentBids[player] = bid;
+
+    // Advance current player
+    state.currentPlayer = (state.currentPlayer + 1) % state.numPlayers;
+  }
+
+  private void makeHeadBids() {
+    // Get all cards from player hands.
+    Card[] allCards = new Card[state.numPlayers];
+
+    for (int i = 0; i < state.numPlayers; i++) {
+      allCards[i] = getPlayerById(i).getHand().cards.get(0);
+    }
+
+    // Collect bids from all players.
+    int[] headBids = new int[state.numPlayers];
+
+    for (int i = 0; i < state.numPlayers; i++) {
+      // Filter out the current player's card.
+      Card[] opponentCards = new Card[state.numPlayers];
+      for (int j = 0; j < state.numPlayers; j++) {
+        if (j != i) {
+          opponentCards[j] = allCards[j];
+        } else {
+          opponentCards[j] = null;
+        }
+      }
+
+      headBids[i] = getPlayerById(i).makeHeadBid(state, opponentCards);
+    }
+
+    // Set bids.
+    for (int i = 0; i < state.numPlayers; i++) {
+      makeBid(i, headBids[i]);
+    }
+  }
+
+  private void makeOneRoundBids() {
+    // Collect all bids.
+    int[] bids = new int[state.numPlayers];
+
+    for (int i = 0; i < state.numPlayers; i++) {
+      bids[i] = getPlayerById(i).makeBid(state);
+    }
+
+    // Set bids.
+    for (int i = 0; i < state.numPlayers; i++) {
+      makeBid(i, bids[i]);
+    }
+  }
+
+  private void playCard(int player, Card card) {
+    // Apply the play
+    state.currentPlay[player] = card;
+
+    // Check if we need to update the current winning card/player
+    if (Rules.isCardWinning(card, state.winningCard, state.trumpCard)) {
+      state.winningCard = card;
+      state.winningPlayer = player;
+    }
+
+    // Advance current player
+    state.currentPlayer = (state.currentPlayer + 1) % state.numPlayers;
+  }
+
+  private void finishPlay() {
+    // Give a trick to the winning player.
+    state.currentTricks[state.winningPlayer]++;
+
+    // Increment the number of tricks played this hand
+    state.playedTricks++;
+
+    // Print out finished trick information.
+    printTrickInfo();
+
+    // Update the current leader based on who won the trick.
+    state.currentLeader = state.winningPlayer;
+    state.currentPlayer = state.currentLeader;
+
+    // Reset the current play ready for the next trick.
+    state.currentPlay = new Card[state.numPlayers];
+    state.winningCard = null;
+    state.winningPlayer = -1;
+  }
+
+  private void finishRound() {
+    // Add this round's data to the history
+    // Player-Specific Data
+    for (int i = 0; i < state.numPlayers; i++) {
+      // Bids
+      state.bidHistory[state.currentRound][i] = state.currentBids[i];
+      // Tricks Won
+      state.trickHistory[state.currentRound][i] = state.currentTricks[i];
+      // Scores
+      // Grab Current Score from last round, or if it's the first round, set to 0.
+      int currentScore;
+      if (state.currentRound == 0) {
+        currentScore = 0;
+      } else {
+        currentScore = state.scoreHistory[state.currentRound - 1][i];
+      }
+      // Add this round's score to the current score, and save it in this round's
+      // history.
+      state.scoreHistory[state.currentRound][i] = Rules.calculateScore(state.currentBids[i], state.currentTricks[i])
+          + currentScore;
+    }
+
+    // Game-Wide Data
+    // Trump Card
+    state.trumpCardHistory[state.currentRound] = state.trumpCard;
+    // Dealer
+    state.dealerHistory[state.currentRound] = state.currentDealer;
+    // Bid Delta
+    state.bidDeltaHistory[state.currentRound] = Rules.calculateBidDelta(state.currentBids, state.numPlayers,
+        state.handSize);
+    // Score Delta
+    state.scoreDeltaHistory[state.currentRound] = Rules.calculateScoreDelta(state.scoreHistory[state.currentRound],
+        state.numPlayers);
+
+    // Increment the round counter
+    state.currentRound++;
+
+    // Update the hand size
+    if (state.currentRound < state.totalRounds / 2) {
+      state.handSize--;
+    } else if (state.currentRound > state.totalRounds / 2) {
+      state.handSize++;
+    }
+
+    // Update Player Positions
+    state.currentDealer = (state.currentDealer + 1) % state.numPlayers;
+    state.currentPlayer = (state.currentDealer + 1) % state.numPlayers;
+    state.currentLeader = state.currentPlayer;
+
+    // Reset round data to default values.
+    state.currentBids = new int[state.numPlayers];
+    for (int i = 0; i < state.numPlayers; i++) {
+      state.currentBids[i] = -1;
+    }
+    state.currentTricks = new int[state.numPlayers];
+    state.trumpCard = null;
+    state.playedTricks = 0;
   }
 
   public boolean isGameOver() {
     return state.currentRound >= state.totalRounds;
+  }
+
+  private void printTrickInfo() {
+    InputHandler.printNewSection();
+
+    System.out.println(state.playerNames[state.winningPlayer] + " won the trick with the " + state.winningCard + "!\n");
+
+    System.out
+        .println(state.playerNames[state.currentLeader] + " lead the " + state.currentPlay[state.currentLeader]
+            + ", " + state.trumpCard.getSuit() + " is trumps.\n");
+
+    System.out.println("The played cards were:");
+    for (int i = 0; i < state.numPlayers; i++) {
+      System.out.println(state.playerNames[i] + ": " + state.currentPlay[i]);
+    }
+
+    System.out.println("\nThe Bids for this round are:");
+    for (int i = 0; i < state.numPlayers; i++) {
+      System.out.println(state.playerNames[i] + ": " + state.currentBids[i] + " (" + state.currentTricks[i] + ")");
+    }
+
+    int remainingTricks = state.handSize - state.playedTricks;
+    if (remainingTricks == 1) {
+      System.out.println("\nThere is " + remainingTricks + " trick left to play this hand.");
+    } else {
+      System.out.println("\nThere are " + remainingTricks + " tricks left to play this hand.");
+    }
+    InputHandler.pressEnterToContinue();
   }
 
   public void printScoreSheet() {
@@ -70,7 +304,7 @@ public class GameManager {
     topRow += " T ||";
     // Per Player:
     for (int i = 0; i < numPlayers; i++) {
-      String playerName = getPlayerNameById(i);
+      String playerName = getPlayerById(i).getName();
       int playerNameLength = playerName.length();
       if (playerNameLength > 11) {
         playerName = playerName.substring(0, 11);
@@ -135,6 +369,8 @@ public class GameManager {
           bidString += bid;
           if (state.dealerHistory[i] == j) {
             bidString += "*";
+          } else {
+            bidString += " ";
           }
           bidString += " |";
         }
@@ -155,7 +391,7 @@ public class GameManager {
         roundRow += scoreString;
       }
       // Bid Delta (4)
-      int bidDelta = state.deltaBidHistory[i];
+      int bidDelta = state.bidDeltaHistory[i];
       if (bidDelta == -100) {
         roundRow += "    |";
       } else {
@@ -172,7 +408,7 @@ public class GameManager {
         roundRow += "|";
       }
       // Score Delta (5)
-      int scoreDelta = state.deltaScoreHistory[i];
+      int scoreDelta = state.scoreDeltaHistory[i];
       if (scoreDelta == -1) {
         roundRow += "     ||";
       } else {
@@ -211,7 +447,11 @@ public class GameManager {
         finalRow += "     |     ||";
       } else {
         // Placing
-        finalRow += " " + findPlacing(state.scoreHistory[state.currentRound - 1], i) + " |";
+        String placing = findPlacing(state.scoreHistory[state.currentRound - 1], i);
+        if (placing.length() == 3) {
+          finalRow += " ";
+        }
+        finalRow += placing + " |";
         // Average
         float average = findAverage(i);
         if (average < 10) {
@@ -302,7 +542,7 @@ public class GameManager {
 
   private float findAverage(int player) {
     int score = state.scoreHistory[state.currentRound - 1][player];
-    int rounds = state.currentRound + 1;
+    int rounds = state.currentRound;
     return (float) score / rounds;
   }
 
@@ -325,15 +565,18 @@ public class GameManager {
     }
 
     System.out.println("Current Round: " + roundString);
-    System.out.println("Current Dealer: " + getPlayerNameById(state.currentDealer));
-    System.out.println("Current Leader: " + getPlayerNameById(state.currentLeader));
+    System.out.println("Current Dealer: " + getPlayerById(state.currentDealer).getName());
+    System.out.println("Current Leader: " + getPlayerById(state.currentLeader).getName());
 
     String stateString;
     switch (state.currentPhase) {
       case 0:
-        stateString = "BIDDING";
+        stateString = "SETUP";
         break;
       case 1:
+        stateString = "BIDDING";
+        break;
+      case 2:
         stateString = "PLAYING";
         break;
       default:
@@ -341,16 +584,16 @@ public class GameManager {
         break;
     }
     System.out.println("\nCurrent Game State: " + stateString);
-    System.out.println("Currently on: " + getPlayerNameById(state.currentPlayer));
+    System.out.println("Currently on: " + getPlayerById(state.currentPlayer).getName());
 
-    System.out.print("\n");
-    printScoreSheet();
+    // System.out.println("\nScore Sheet:\n");
+    // printScoreSheet();
   }
 
-  private String getPlayerNameById(int id) {
+  private Player getPlayerById(int id) {
     for (Player player : players) {
       if (player.getId() == id) {
-        return player.getName();
+        return player;
       }
     }
     return null;

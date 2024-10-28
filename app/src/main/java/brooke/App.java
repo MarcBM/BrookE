@@ -13,17 +13,15 @@ public class App {
 
         // CrystalBrook game = InputHandler.gatherGameType(numPlayers);
 
-        int numPlayers = 8;
-        int startingHandSize = 6;
-        CrystalBrook game = new TerminalGame();
+        int numPlayers = 4;
+        int startingHandSize = 1;
+        CrystalBrook game = new TableGame(numPlayers);
 
         GameManager gm = new GameManager(game, numPlayers, startingHandSize);
 
         gm.playGame();
 
         System.out.println("Game Over!");
-
-        gm.printScoreSheet();
 
         cleanup();
     }

@@ -3,7 +3,7 @@ package brooke.GameObjects;
 import java.util.ArrayList;
 
 public class Hand {
-  private ArrayList<Card> cards;
+  public ArrayList<Card> cards;
 
   public Hand(int startingSize) {
     cards = new ArrayList<Card>(startingSize);
@@ -18,7 +18,20 @@ public class Hand {
     return card;
   }
 
+  public boolean hasCard(Card card) {
+    return cards.contains(card);
+  }
+
   public boolean isEmpty() {
     return cards.isEmpty();
+  }
+
+  @Override
+  public String toString() {
+    String hand = "";
+    for (Card card : cards) {
+      hand += card.toString() + ", ";
+    }
+    return hand;
   }
 }

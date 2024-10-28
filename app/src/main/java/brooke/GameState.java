@@ -4,6 +4,7 @@ import brooke.GameObjects.*;
 
 public class GameState {
   public int numPlayers;
+  public String[] playerNames;
   public int currentPlayer;
   public int currentLeader;
   public int currentDealer;
@@ -18,8 +19,8 @@ public class GameState {
 
   public Card[] trumpCardHistory;
   public int[] dealerHistory;
-  public int[] deltaScoreHistory;
-  public int[] deltaBidHistory;
+  public int[] scoreDeltaHistory;
+  public int[] bidDeltaHistory;
 
   public int[] currentBids;
   public int[] currentTricks;
@@ -32,8 +33,9 @@ public class GameState {
 
   public int currentPhase;
 
-  public GameState(int numPlayers, int startingHandSize) {
+  public GameState(int numPlayers, int startingHandSize, String[] playerNames) {
     this.numPlayers = numPlayers;
+    this.playerNames = playerNames;
     this.currentDealer = 0;
     this.currentPlayer = 1;
     this.currentLeader = 1;
@@ -55,13 +57,13 @@ public class GameState {
 
     this.trumpCardHistory = new Card[totalRounds];
     this.dealerHistory = new int[totalRounds];
-    this.deltaScoreHistory = new int[totalRounds];
-    this.deltaBidHistory = new int[totalRounds];
+    this.scoreDeltaHistory = new int[totalRounds];
+    this.bidDeltaHistory = new int[totalRounds];
 
     for (int i = 0; i < totalRounds; i++) {
       this.dealerHistory[i] = -1;
-      this.deltaScoreHistory[i] = -1;
-      this.deltaBidHistory[i] = -100;
+      this.scoreDeltaHistory[i] = -1;
+      this.bidDeltaHistory[i] = -100;
     }
 
     this.currentBids = new int[numPlayers];
@@ -74,145 +76,9 @@ public class GameState {
     this.trumpCard = null;
     this.playedTricks = 0;
     this.currentPhase = 0;
-  }
-
-  public void newRound(Card trumpCard) {
-    this.trumpCard = trumpCard;
-  }
-
-  public void finishRound() {
-    for (int i = 0; i < numPlayers; i++) {
-      this.bidHistory[this.currentRound][i] = this.currentBids[i];
-      this.trickHistory[this.currentRound][i] = this.currentTricks[i];
-
-      int currentScore;
-      if (this.currentRound == 0) {
-        currentScore = 0;
-      } else {
-        currentScore = this.scoreHistory[this.currentRound - 1][i];
-      }
-
-      this.scoreHistory[this.currentRound][i] = calculateScore(this.currentBids[i], this.currentTricks[i])
-          + currentScore;
-    }
-
-    this.trumpCardHistory[this.currentRound] = this.trumpCard;
-    this.dealerHistory[this.currentRound] = this.currentDealer;
-    this.deltaBidHistory[this.currentRound] = calculateDeltaBid();
-    this.deltaScoreHistory[this.currentRound] = calculateDeltaScore();
-
-    this.currentRound++;
-
-    if (this.currentRound < this.totalRounds / 2) {
-      this.handSize--;
-    } else if (this.currentRound > this.totalRounds / 2) {
-      this.handSize++;
-    }
-
-    this.currentDealer = (this.currentDealer + 1) % this.numPlayers;
-    this.currentPlayer = (this.currentDealer + 1) % this.numPlayers;
-    this.currentLeader = this.currentPlayer;
-
-    this.currentBids = new int[numPlayers];
-
-    for (int i = 0; i < numPlayers; i++) {
-      this.currentBids[i] = -1;
-    }
-
-    this.currentTricks = new int[numPlayers];
-    this.trumpCard = null;
-    this.playedTricks = 0;
-    this.currentPhase = 0;
-  }
-
-  private int calculateScore(int bid, int tricks) {
-    if (bid == tricks) {
-      if (bid == 0) {
-        return 7;
-      } else {
-        return 10 + bid;
-      }
-    } else {
-      return tricks;
-    }
-  }
-
-  private int calculateDeltaBid() {
-    int bidCount = 0;
-
-    for (int i = 0; i < numPlayers; i++) {
-      bidCount += this.currentBids[i];
-    }
-
-    return bidCount - this.handSize;
-  }
-
-  private int calculateDeltaScore() {
-    int minScore = Integer.MAX_VALUE;
-    int maxScore = Integer.MIN_VALUE;
-
-    for (int i = 0; i < numPlayers; i++) {
-      if (this.scoreHistory[this.currentRound][i] < minScore) {
-        minScore = this.scoreHistory[this.currentRound][i];
-      }
-
-      if (this.scoreHistory[this.currentRound][i] > maxScore) {
-        maxScore = this.scoreHistory[this.currentRound][i];
-      }
-    }
-
-    return maxScore - minScore;
-  }
-
-  public void makeBid(int player, int bid) {
-    this.currentBids[player] = bid;
-  }
-
-  public void playCard(int player, Card card) {
-    this.currentPlay[player] = card;
-
-    if (isCardWinning(this.winningCard, card)) {
-      this.winningCard = card;
-      this.winningPlayer = player;
-    }
-
-    currentPlayer = (currentPlayer + 1) % numPlayers;
-    if (currentPlayer == currentLeader) {
-      finishPlay();
-    }
-  }
-
-  public void finishPlay() {
-    this.currentLeader = this.winningPlayer;
-    this.currentPlayer = this.winningPlayer;
-
-    this.currentTricks[this.winningPlayer]++;
 
     this.currentPlay = new Card[this.numPlayers];
     this.winningCard = null;
     this.winningPlayer = -1;
-
-    this.playedTricks++;
-
-    if (this.playedTricks == this.handSize) {
-      finishRound();
-    }
   }
-
-  private boolean isCardWinning(Card oldWinner, Card newCard) {
-    if (oldWinner == null) {
-      return true;
-    }
-
-    if (newCard.getSuit() == this.trumpCard.getSuit() && oldWinner.getSuit() != this.trumpCard.getSuit()) {
-      return true;
-    }
-
-    if (newCard.getSuit() == oldWinner.getSuit() && newCard.compareTo(oldWinner) > 0) {
-      return true;
-    }
-
-    return false;
-  }
-
 }

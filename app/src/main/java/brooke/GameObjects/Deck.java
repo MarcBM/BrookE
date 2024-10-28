@@ -23,7 +23,7 @@ public class Deck {
   }
 
   public Card dealCard() {
-    return cards.remove((int) Math.random() * cards.size());
+    return cards.remove((int) (Math.random() * cards.size()));
   }
 
   public boolean drawSpecificCard(Card card) {

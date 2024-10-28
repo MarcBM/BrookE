@@ -35,4 +35,38 @@ public enum Rank {
         throw new IllegalArgumentException("Invalid rank: " + rankString);
     }
   }
+
+  @Override
+  public String toString() {
+    switch (this) {
+      case TWO:
+        return "2";
+      case THREE:
+        return "3";
+      case FOUR:
+        return "4";
+      case FIVE:
+        return "5";
+      case SIX:
+        return "6";
+      case SEVEN:
+        return "7";
+      case EIGHT:
+        return "8";
+      case NINE:
+        return "9";
+      case TEN:
+        return "10";
+      case JACK:
+        return "JACK";
+      case QUEEN:
+        return "QUEEN";
+      case KING:
+        return "KING";
+      case ACE:
+        return "ACE";
+      default:
+        throw new IllegalArgumentException("Invalid rank: " + this);
+    }
+  }
 }
