@@ -19,7 +19,7 @@ public class TableGame implements CrystalBrook {
   @Override
   public Player generateNewPlayer() {
     if (Player._id == brookeID) {
-      brooke = new BrookEHuman("BrookE");
+      brooke = new BrookEBlindZero("BrookE");
       return brooke;
     } else {
       return new Human(InputHandler.gatherPlayerName(Player._id + 1));

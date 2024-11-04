@@ -11,7 +11,7 @@ public class TerminalGame implements CrystalBrook {
 
   @Override
   public Player generateNewPlayer() {
-    return new BrookEHuman("Player " + (Player._id + 1));
+    return new BrookEBlindZero("Player " + (Player._id + 1));
   }
 
   public void setupRound(GameState state, ArrayList<Player> players) {

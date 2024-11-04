@@ -13,9 +13,9 @@ public class App {
 
         // CrystalBrook game = InputHandler.gatherGameType(numPlayers);
 
-        int numPlayers = 4;
-        int startingHandSize = 1;
-        CrystalBrook game = new TableGame(numPlayers);
+        int numPlayers = 5;
+        int startingHandSize = 3;
+        CrystalBrook game = new TerminalGame();
 
         GameManager gm = new GameManager(game, numPlayers, startingHandSize);
 
